@@ -35,11 +35,12 @@ export default function Navbar() {
             />
           </Link>
           <ul className="nav-links">
-            <li><Link href="#capabilities">Capabilities</Link></li>
-            <li><Link href="#how-it-works">Platform</Link></li>
-            <li><Link href="#pricing">Enterprise</Link></li>
-            <li><Link href="#about">About</Link></li>
-            <li><Link href="#faq">FAQ</Link></li>
+            <li><Link href="/features">Features</Link></li>
+            <li><Link href="/integrations">Integrations</Link></li>
+            <li><Link href="/pricing">Pricing</Link></li>
+            <li><Link href="/documentation">Docs</Link></li>
+            <li><Link href="/blog">Blog</Link></li>
+            <li><Link href="/support">Support</Link></li>
           </ul>
           <div className="nav-actions">
             <Link href="/signin" className="btn btn-ghost">Sign in</Link>
@@ -57,11 +58,12 @@ export default function Navbar() {
       </nav>
 
       <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`} id="mobileMenu">
-        <Link href="#capabilities" onClick={toggleMobileMenu}>Capabilities</Link>
-        <Link href="#how-it-works" onClick={toggleMobileMenu}>Platform</Link>
-        <Link href="#pricing" onClick={toggleMobileMenu}>Enterprise</Link>
-        <Link href="#about" onClick={toggleMobileMenu}>About</Link>
-        <Link href="#faq" onClick={toggleMobileMenu}>FAQ</Link>
+        <Link href="/features" onClick={toggleMobileMenu}>Features</Link>
+        <Link href="/integrations" onClick={toggleMobileMenu}>Integrations</Link>
+        <Link href="/pricing" onClick={toggleMobileMenu}>Pricing</Link>
+        <Link href="/documentation" onClick={toggleMobileMenu}>Documentation</Link>
+        <Link href="/blog" onClick={toggleMobileMenu}>Blog</Link>
+        <Link href="/support" onClick={toggleMobileMenu}>Support</Link>
         <div className="nav-cta-group">
           <Link href="/signin" className="btn btn-ghost" onClick={toggleMobileMenu}>Sign in</Link>
           <Link href="/briefing" className="btn btn-primary" onClick={toggleMobileMenu}>Request Briefing</Link>

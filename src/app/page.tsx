@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import AOS from "aos";
 import "aos/dist/aos.css";
 
@@ -13,6 +13,7 @@ import SolutionSection from "@/components/SolutionSection";
 import CodeDiff from "@/components/CodeDiff";
 import Features from "@/components/Features";
 import StrategicSection from "@/components/StrategicSection";
+import InfrastructureSection from "@/components/InfrastructureSection";
 import Integrations from "@/components/Integrations";
 import PlatformMaturity from "@/components/PlatformMaturity";
 import Testimonials from "@/components/Testimonials";
@@ -24,16 +25,44 @@ import CTAForm from "@/components/CTAForm";
 import Footer from "@/components/Footer";
 
 export default function Home() {
+  const [isLoaded, setIsLoaded] = useState(false);
+
   useEffect(() => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+    
     AOS.init({
-      duration: 1000,
-      easing: 'ease-out-quad',
+      duration: 800,
+      easing: 'ease-out-cubic',
       once: true,
+      disable: false,
+      startEvent: 'DOMContentLoaded',
+      offset: 50,
+      delay: 0,
     });
+
+    setIsLoaded(true);
+    
+    const handleScroll = () => {
+      if (window.scrollY > 0) {
+        window.scrollTo(0, 0);
+      }
+    };
+    
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }, 100);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
 
   return (
-    <main>
+    <main style={{ opacity: isLoaded ? 1 : 0, transition: 'opacity 0.3s ease' }}>
       <Navbar />
       <BlogPill />
       <Hero />
@@ -42,6 +71,7 @@ export default function Home() {
       {/* 1. Capabilities */}
       <Features />
       <StrategicSection />
+      <InfrastructureSection />
       
       {/* 2. Platform */}
       <ProblemSection />

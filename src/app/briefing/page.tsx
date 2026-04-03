@@ -13,31 +13,51 @@ function BriefingForm() {
     email: '',
     company: '',
     role: '',
+    companySize: '',
+    interest: '',
+    cloudStack: '',
     message: ''
   });
 
   useEffect(() => {
-    const interest = searchParams.get('interest');
-    if (interest) {
-      setFormData(prev => ({
-        ...prev,
-        message: `I'm interested in joining the private alpha for ${interest}. Please provide more technical details on deployment and prerequisites.`
-      }));
-    }
+    const interestParam = searchParams.get('interest');
+    const emailParam = searchParams.get('email');
+    
+    setFormData(prev => ({
+      ...prev,
+      email: emailParam || prev.email,
+      interest: interestParam || prev.interest,
+      message: interestParam 
+        ? `I'm interested in joining the private alpha for ${interestParam}. Please provide more technical details on deployment and prerequisites.`
+        : prev.message
+    }));
   }, [searchParams]);
 
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('loading');
-    setTimeout(() => {
-      setStatus('success');
-    }, 1500);
+    
+    try {
+      const response = await fetch('/api/briefing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+      
+      if (response.ok) {
+        setStatus('success');
+      } else {
+        setStatus('error');
+      }
+    } catch {
+      setStatus('error');
+    }
   };
 
   return (
-    <div className="auth-card reveal in" style={{ maxWidth: '520px', position: 'relative' }}>
+    <div className="auth-card reveal in" style={{ maxWidth: '560px', position: 'relative' }}>
       <Link href="/" className="auth-close" aria-label="Close">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -100,15 +120,65 @@ function BriefingForm() {
             </div>
           </div>
 
+          <div className="auth-grid">
+            <div className="form-group">
+              <label htmlFor="companySize">Company Size</label>
+              <select 
+                id="companySize" required className="auth-input"
+                value={formData.companySize} onChange={(e) => setFormData({...formData, companySize: e.target.value})}
+              >
+                <option value="" disabled hidden>Select size...</option>
+                <option value="1-50">1-50 employees</option>
+                <option value="51-250">51-250 employees</option>
+                <option value="251-1000">251-1000 employees</option>
+                <option value="1000+">1000+ employees</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label htmlFor="interest">Primary Interest</label>
+              <select 
+                id="interest" required className="auth-input"
+                value={formData.interest} onChange={(e) => setFormData({...formData, interest: e.target.value})}
+              >
+                <option value="" disabled hidden>Select interest...</option>
+                <option value="incident-resolution">Autonomous Incident Resolution</option>
+                <option value="infra-optimization">Infrastructure Optimization</option>
+                <option value="dev-productivity">Developer Productivity</option>
+                <option value="custom-llm">Custom Enterprise LLMs</option>
+              </select>
+            </div>
+          </div>
+
           <div className="form-group">
-            <label htmlFor="message">How can AI4Bharat help?</label>
+            <label htmlFor="cloudStack">Primary Cloud Environment</label>
+            <select 
+              id="cloudStack" required className="auth-input"
+              value={formData.cloudStack} onChange={(e) => setFormData({...formData, cloudStack: e.target.value})}
+            >
+              <option value="" disabled hidden>Select environment...</option>
+              <option value="aws">Amazon Web Services (AWS)</option>
+              <option value="gcp">Google Cloud Platform (GCP)</option>
+              <option value="azure">Microsoft Azure</option>
+              <option value="on-prem">On-Premises / Private Cloud</option>
+              <option value="multi-cloud">Multi-Cloud</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="message">Additional Requirements (Optional)</label>
             <textarea 
-              id="message" rows={4} className="auth-input" 
+              id="message" rows={3} className="auth-input" 
               style={{ resize: 'vertical' }}
-              placeholder="Tell us about your infrastructure, incident volume, and current observability stack..."
+              placeholder="Tell us about your infrastructure, incident volume, or specific goals..."
               value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})}
             ></textarea>
           </div>
+          
+          {status === 'error' && (
+            <div style={{ color: '#ef4444', textAlign: 'center', marginBottom: '16px' }}>
+              Failed to submit. Please try again.
+            </div>
+          )}
           
           <button type="submit" className="btn btn-primary btn-lg" disabled={status === 'loading'} style={{ width: '100%', marginTop: '8px' }}>
             {status === 'loading' ? 'Submitting request...' : 'Schedule Briefing'}

@@ -20,7 +20,7 @@ export default function Features() {
       description: "Multi-source diagnostic reasoning across logs, traces, metrics, and code history. Identifies root cause in seconds, not hours — without an engineer ever being paged.",
       icon: (
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-          <path d="M11 2L3 6l8 4 8-4-8-4zM3 16l8 4 8-4M3 11l8 4 8-4" stroke="#f97316" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M11 2L3 6l8 4 8-4-8-4zM3 16l8 4 8-4M3 11l8 4 8-4" stroke="#f97316" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       )
     },
@@ -29,8 +29,8 @@ export default function Features() {
       description: "Persistent semantic memory across your entire incident history, codebase, and runbooks. Every resolution is informed by organizational knowledge accumulated over time.",
       icon: (
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-          <circle cx="10" cy="10" r="7" stroke="#f97316" stroke-width="1.75"/>
-          <path d="M19 19l-3.5-3.5" stroke="#f97316" stroke-width="1.75" stroke-linecap="round"/>
+          <circle cx="10" cy="10" r="7" stroke="#f97316" strokeWidth="1.75"/>
+          <path d="M19 19l-3.5-3.5" stroke="#f97316" strokeWidth="1.75" strokeLinecap="round"/>
         </svg>
       )
     },
@@ -39,8 +39,8 @@ export default function Features() {
       description: "Every fix is delivered as a documented, tested pull request with full reasoning, rollback procedure, and compliance evidence. Built for regulated industries.",
       icon: (
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-          <path d="M8 11l3 3 6-6" stroke="#f97316" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-          <rect x="2" y="2" width="18" height="18" rx="4" stroke="#f97316" stroke-width="1.75"/>
+          <path d="M8 11l3 3 6-6" stroke="#f97316" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/>
+          <rect x="2" y="2" width="18" height="18" rx="4" stroke="#f97316" strokeWidth="1.75"/>
         </svg>
       )
     },
@@ -49,8 +49,8 @@ export default function Features() {
       description: "SOC 2 Type II certified. Self-hosted deployment available. Air-gapped execution environments ensure your intellectual property never leaves your infrastructure perimeter.",
       icon: (
         <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-          <rect x="3" y="10" width="16" height="10" rx="2" stroke="#f97316" stroke-width="1.75"/>
-          <path d="M7 10V7a4 4 0 018 0v3" stroke="#f97316" stroke-width="1.75" stroke-linecap="round"/>
+          <rect x="3" y="10" width="16" height="10" rx="2" stroke="#f97316" strokeWidth="1.75"/>
+          <path d="M7 10V7a4 4 0 018 0v3" stroke="#f97316" strokeWidth="1.75" strokeLinecap="round"/>
         </svg>
       )
     }

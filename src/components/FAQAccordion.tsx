@@ -1,9 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 export default function FAQAccordion() {
-  const [openIndex, setOpenIndex] = useState(0);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [isContactOpen, setIsContactOpen] = useState(false);
+  const [contactForm, setContactForm] = useState({
+    name: '',
+    email: '',
+    company: '',
+    subject: '',
+    message: ''
+  });
+  const [contactStatus, setContactStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   const faqData = [
     {
@@ -33,41 +43,215 @@ export default function FAQAccordion() {
   ];
 
   const toggleFaq = (index: number) => {
-    setOpenIndex(openIndex === index ? -1 : index);
+    setOpenIndex(openIndex === index ? null : index);
   };
 
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setContactStatus('loading');
+    
+    try {
+      const response = await fetch('/api/briefing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(contactForm),
+      });
+      
+      if (response.ok) {
+        setContactStatus('success');
+        setContactForm({ name: '', email: '', company: '', subject: '', message: '' });
+      } else {
+        setContactStatus('error');
+      }
+    } catch {
+      setContactStatus('error');
+    }
+  };
+
+  const closeContactModal = () => {
+    setIsContactOpen(false);
+    setContactStatus('idle');
+  };
+
+  useEffect(() => {
+    if (isContactOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isContactOpen]);
+
   return (
-    <section className="faq-section" id="faq">
-      <div className="container">
-        <div className="section-header center">
-          <h2 className="display-md gradient-text">Frequently asked questions</h2>
-          <p className="body-lg">Technical and commercial questions from engineering and procurement teams.</p>
-        </div>
-        <div className="faq-list">
-          {faqData.map((item, index) => (
-            <div 
-              key={index} 
-              className={`faq-item ${openIndex === index ? 'open' : ''}`}
-              data-aos="fade-up"
-              data-aos-delay={index * 50}
-            >
-              <button className="faq-q" onClick={() => toggleFaq(index)}>
-                {item.q}
-                <svg className="faq-chevron" width="18" height="18" viewBox="0 0 18 18" fill="none">
-                  <path d="M4.5 6.75L9 11.25l4.5-4.5" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </button>
-              <div className="faq-a">
-                <p>{item.a}</p>
+    <>
+      <section className="faq-section" id="faq">
+        <div className="container">
+          <div className="section-header center">
+            <h2 className="display-md gradient-text">Frequently asked questions</h2>
+            <p className="body-lg">Technical and commercial questions from engineering and procurement teams.</p>
+          </div>
+          <div className="faq-list">
+            {faqData.map((item, index) => (
+              <div 
+                key={index} 
+                className={`faq-item ${openIndex === index ? 'open' : ''}`}
+              >
+                <button className="faq-q" onClick={() => toggleFaq(index)}>
+                  <span className="faq-q-text">{item.q}</span>
+                  <span className="faq-icon">
+                    <svg className="faq-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M6 9l6 6 6-6"/>
+                    </svg>
+                  </span>
+                </button>
+                <div className="faq-content">
+                  <div className="faq-a">
+                    <p>{item.a}</p>
+                  </div>
+                </div>
               </div>
+            ))}
+          </div>
+          <div className="faq-contact">
+            <div className="faq-contact-icon">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+              </svg>
             </div>
-          ))}
+            <div className="faq-contact-text">
+              <h3>Still have questions?</h3>
+              <p>Can't find the answer you're looking for? Reach out to our enterprise team.</p>
+            </div>
+            <button className="btn btn-primary" onClick={() => setIsContactOpen(true)}>
+              Contact Enterprise Team
+            </button>
+          </div>
         </div>
-        <div className="faq-contact">
-          <p>Technical or commercial questions not addressed here?</p>
-          <a href="mailto:enterprise@ai4bharat.ai" className="link-arrow">Contact our enterprise team →</a>
+      </section>
+
+      {isContactOpen && (
+        <div className="modal-overlay" onClick={closeContactModal}>
+          <div className="contact-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="auth-close" onClick={closeContactModal} aria-label="Close">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+            
+            {contactStatus === 'success' ? (
+              <div className="contact-success">
+                <div className="contact-success-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M20 6L9 17l-5-5"/>
+                  </svg>
+                </div>
+                <h2>Message Sent</h2>
+                <p>Thank you for reaching out. Our enterprise team will respond within 24 hours.</p>
+                <button className="btn btn-primary" onClick={closeContactModal}>Close</button>
+              </div>
+            ) : (
+              <>
+                <div className="auth-header">
+                  <div className="contact-icon" style={{ margin: '0 auto 20px' }}>
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </div>
+                  <h1>Contact Enterprise Team</h1>
+                  <p>Get in touch with our team for technical or commercial inquiries.</p>
+                </div>
+                
+                <form className="auth-form" onSubmit={handleContactSubmit}>
+                  <div className="auth-grid">
+                    <div className="form-group">
+                      <label htmlFor="contact-name">Full Name</label>
+                      <input 
+                        type="text" 
+                        id="contact-name" 
+                        required 
+                        className="auth-input" 
+                        placeholder="Sarah Chen"
+                        value={contactForm.name}
+                        onChange={(e) => setContactForm({...contactForm, name: e.target.value})}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="contact-email">Work Email</label>
+                      <input 
+                        type="email" 
+                        id="contact-email" 
+                        required 
+                        className="auth-input" 
+                        placeholder="sarah@company.com"
+                        value={contactForm.email}
+                        onChange={(e) => setContactForm({...contactForm, email: e.target.value})}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="auth-grid">
+                    <div className="form-group">
+                      <label htmlFor="contact-company">Company</label>
+                      <input 
+                        type="text" 
+                        id="contact-company" 
+                        required 
+                        className="auth-input" 
+                        placeholder="Acme Corp"
+                        value={contactForm.company}
+                        onChange={(e) => setContactForm({...contactForm, company: e.target.value})}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="contact-subject">Subject</label>
+                      <select 
+                        id="contact-subject" 
+                        required 
+                        className="auth-input"
+                        value={contactForm.subject}
+                        onChange={(e) => setContactForm({...contactForm, subject: e.target.value})}
+                      >
+                        <option value="" disabled hidden>Select topic...</option>
+                        <option value="technical">Technical Question</option>
+                        <option value="commercial">Commercial Inquiry</option>
+                        <option value="integration">Integration Support</option>
+                        <option value="partnership">Partnership Opportunity</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label htmlFor="contact-message">Message</label>
+                    <textarea 
+                      id="contact-message" 
+                      rows={3} 
+                      required 
+                      className="auth-input" 
+                      placeholder="Describe your question or requirements..."
+                      value={contactForm.message}
+                      onChange={(e) => setContactForm({...contactForm, message: e.target.value})}
+                    />
+                  </div>
+                  
+                  {contactStatus === 'error' && (
+                    <div className="form-error">Failed to send message. Please try again.</div>
+                  )}
+                  
+                  <button 
+                    type="submit" 
+                    className="btn btn-primary btn-lg" 
+                    disabled={contactStatus === 'loading'}
+                    style={{ width: '100%' }}
+                  >
+                    {contactStatus === 'loading' ? 'Sending...' : 'Send Message'}
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
         </div>
-      </div>
-    </section>
+      )}
+    </>
   );
 }

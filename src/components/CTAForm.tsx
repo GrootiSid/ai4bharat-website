@@ -1,24 +1,23 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 export default function CTAForm() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState('idle'); // idle, loading, success
+
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     
     setStatus('loading');
-    // Simulate API call
+    // Redirect to the full briefing form with pre-filled email
     setTimeout(() => {
-      setStatus('success');
-      setEmail('');
-      setTimeout(() => {
-        setStatus('idle');
-      }, 4000);
-    }, 1000);
+      router.push(`/briefing?email=${encodeURIComponent(email)}`);
+    }, 800);
   };
 
   return (

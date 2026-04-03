@@ -26,7 +26,7 @@ export default function Hero() {
           <Link href="/briefing" className="btn btn-primary btn-lg">Request Strategic Briefing</Link>
           <Link href="#demo" className="btn btn-outline btn-lg">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+              <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5"/>
               <path d="M6.5 5.5l4 2.5-4 2.5V5.5z" fill="currentColor"/>
             </svg>
             View Platform Demo

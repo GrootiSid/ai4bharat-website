@@ -1,8 +1,106 @@
+'use client';
+
+import { useState, useEffect, useCallback, useRef } from 'react';
+
 export default function AboutSection() {
   const heritage = [
-    "Opendorse", "Ameritas", "Capgemini", "Coca-Cola", 
-    "Marble Technologies", "Nelnet", "University of Nebraska", "DPA Auctions"
+    { name: "Opendorse", type: "Tech Platform", initials: "OP" },
+    { name: "Ameritas", type: "Financial Services", initials: "AM" },
+    { name: "Capgemini", type: "Global Consulting", initials: "CG" },
+    { name: "Coca-Cola", type: "Fortune 500", initials: "CC" },
+    { name: "Marble Technologies", type: "FinTech", initials: "MT" },
+    { name: "Nelnet", type: "Education Tech", initials: "NL" },
+    { name: "University of Nebraska", type: "Research", initials: "UN" },
+    { name: "DPA Auctions", type: "E-Commerce", initials: "DP" }
   ];
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [itemsPerView, setItemsPerView] = useState(4);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [currentTranslate, setCurrentTranslate] = useState(0);
+  const [prevTranslate, setPrevTranslate] = useState(0);
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  const totalSlides = Math.ceil(heritage.length / itemsPerView);
+
+  useEffect(() => {
+    const updateItemsPerView = () => {
+      if (window.innerWidth < 640) setItemsPerView(1);
+      else if (window.innerWidth < 1024) setItemsPerView(2);
+      else setItemsPerView(4);
+    };
+    updateItemsPerView();
+    window.addEventListener('resize', updateItemsPerView);
+    return () => window.removeEventListener('resize', updateItemsPerView);
+  }, []);
+
+  const nextSlide = useCallback(() => {
+    setCurrentIndex((prev) => (prev + 1) % totalSlides);
+  }, [totalSlides]);
+
+  const prevSlide = () => {
+    setCurrentIndex((prev) => (prev - 1 + totalSlides) % totalSlides);
+  };
+
+  useEffect(() => {
+    if (isPaused || isDragging) return;
+    const interval = setInterval(nextSlide, 4000);
+    return () => clearInterval(interval);
+  }, [isPaused, isDragging, nextSlide]);
+
+  useEffect(() => {
+    setCurrentTranslate(-currentIndex * (100 / itemsPerView) * itemsPerView);
+  }, [currentIndex, itemsPerView]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setStartX(e.clientX);
+    setPrevTranslate(currentTranslate);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return;
+    const current = e.clientX;
+    const diff = current - startX;
+    const trackWidth = trackRef.current?.offsetWidth || 1;
+    const movePercentage = (diff / trackWidth) * 100;
+    setCurrentTranslate(prevTranslate + movePercentage);
+  };
+
+  const handleMouseUp = () => {
+    if (!isDragging) return;
+    const movedBy = currentTranslate - prevTranslate;
+    if (movedBy > 10) prevSlide();
+    else if (movedBy < -10) nextSlide();
+    else setCurrentTranslate(prevTranslate);
+    setIsDragging(false);
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsDragging(true);
+    setStartX(e.touches[0].clientX);
+    setPrevTranslate(currentTranslate);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    const current = e.touches[0].clientX;
+    const diff = current - startX;
+    const trackWidth = trackRef.current?.offsetWidth || 1;
+    const movePercentage = (diff / trackWidth) * 100;
+    setCurrentTranslate(prevTranslate + movePercentage);
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+    const movedBy = currentTranslate - prevTranslate;
+    if (movedBy > 10) prevSlide();
+    else if (movedBy < -10) nextSlide();
+    else setCurrentTranslate(prevTranslate);
+    setIsDragging(false);
+  };
 
   return (
     <section className="about-section section" id="about">
@@ -40,18 +138,60 @@ export default function AboutSection() {
         </div>
 
         <div className="about-heritage" data-aos="fade-up">
-          <p className="heritage-title">Direct Operational Background From:</p>
-          <div className="logos-track-wrapper">
-            <div className="logos-track">
-              {/* Set 1 */}
-              {heritage.map((company, i) => (
-                <span key={`h1-${i}`} className="heritage-item">{company}</span>
-              ))}
-              {/* Set 2 (for loop) */}
-              {heritage.map((company, i) => (
-                <span key={`h2-${i}`} className="heritage-item">{company}</span>
-              ))}
+          <div className="heritage-header">
+            <p className="heritage-title">Trusted by Engineering Teams At</p>
+            <div className="heritage-nav">
+              <button className="heritage-btn" onClick={prevSlide} aria-label="Previous">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              <button className="heritage-btn" onClick={nextSlide} aria-label="Next">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
             </div>
+          </div>
+
+          <div 
+            className="heritage-carousel"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => { setIsPaused(false); handleMouseUp(); }}
+          >
+            <div 
+              className="heritage-carousel-inner"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
+              <div 
+                ref={trackRef}
+                className="heritage-track"
+                style={{ transform: `translateX(${currentTranslate}%)` }}
+              >
+                {heritage.map((company, i) => (
+                  <div key={i} className="heritage-card">
+                    <div className="heritage-icon">{company.initials}</div>
+                    <div className="heritage-info">
+                      <span className="heritage-name">{company.name}</span>
+                      <span className="heritage-type">{company.type}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="heritage-dots">
+            {Array.from({ length: totalSlides }).map((_, i) => (
+              <button
+                key={i}
+                className={`heritage-dot ${i === currentIndex ? 'active' : ''}`}
+                onClick={() => setCurrentIndex(i)}
+                aria-label={`Go to slide ${i + 1}`}
+              />
+            ))}
           </div>
         </div>
 
