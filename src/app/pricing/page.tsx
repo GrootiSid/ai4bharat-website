@@ -3,10 +3,13 @@
 import { useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import ModalRoot from '@/components/ModalRoot';
+import { useModalStore } from '@/store/useModalStore';
 import Link from 'next/link';
 
 export default function PricingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const { openCheckout, openContactSales } = useModalStore();
 
   const tiers = [
     {
@@ -24,6 +27,7 @@ export default function PricingPage() {
         'Standard integrations'
       ],
       cta: 'Start Free Trial',
+      ctaType: 'trial',
       featured: false
     },
     {
@@ -43,6 +47,7 @@ export default function PricingPage() {
         'Team collaboration'
       ],
       cta: 'Start Free Trial',
+      ctaType: 'trial',
       featured: true
     },
     {
@@ -64,6 +69,7 @@ export default function PricingPage() {
         'On-premise training'
       ],
       cta: 'Contact Sales',
+      ctaType: 'sales',
       featured: false
     }
   ];
@@ -79,7 +85,7 @@ export default function PricingPage() {
     },
     {
       question: 'Can I switch between plans?',
-      answer: 'Yes, you can upgrade or downgrade your plan at any time. When upgrading, you\'ll be charged the prorated difference. When downgrading, the change takes effect at the start of your next billing cycle.'
+      answer: "Yes, you can upgrade or downgrade your plan at any time. When upgrading, you'll be charged the prorated difference. When downgrading, the change takes effect at the start of your next billing cycle."
     },
     {
       question: 'Do you offer discounts for startups or non-profits?',
@@ -105,8 +111,8 @@ export default function PricingPage() {
           <div className="container">
             <div className="pricing-grid">
               {tiers.map((tier) => (
-                <div 
-                  key={tier.id} 
+                <div
+                  key={tier.id}
                   className={`pricing-card ${tier.featured ? 'featured' : ''}`}
                 >
                   <span className="pricing-tier">{tier.name}</span>
@@ -133,9 +139,23 @@ export default function PricingPage() {
                   </ul>
 
                   <div className="pricing-cta">
-                    <Link href="/briefing" className={`btn ${tier.featured ? 'btn-primary' : 'btn-outline'} btn-lg`}>
-                      {tier.cta}
-                    </Link>
+                    {tier.ctaType === 'trial' ? (
+                      <button
+                        className={`btn ${tier.featured ? 'btn-primary' : 'btn-outline'} btn-lg`}
+                        style={{ width: '100%' }}
+                        onClick={() => openCheckout({ id: tier.id, name: tier.name, price: tier.price, period: tier.period })}
+                      >
+                        {tier.cta}
+                      </button>
+                    ) : (
+                      <button
+                        className="btn btn-outline btn-lg"
+                        style={{ width: '100%' }}
+                        onClick={() => openContactSales()}
+                      >
+                        {tier.cta}
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -151,8 +171,8 @@ export default function PricingPage() {
             </div>
             <div className="faq-list">
               {faqs.map((faq, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className={`faq-item ${openFaq === index ? 'open' : ''}`}
                 >
                   <button className="faq-q" onClick={() => setOpenFaq(openFaq === index ? null : index)}>
@@ -180,7 +200,7 @@ export default function PricingPage() {
               <h2 className="display-md gradient-text">Still have questions?</h2>
               <p>Our team is here to help you find the right plan and answer any questions about AI4Bharat.</p>
               <div className="cta-buttons">
-                <Link href="/briefing" className="btn btn-primary btn-lg">Schedule a Call</Link>
+                <button className="btn btn-primary btn-lg" onClick={() => openContactSales()}>Talk to Sales</button>
                 <Link href="/features" className="btn btn-outline btn-lg">View Features</Link>
               </div>
             </div>
@@ -188,6 +208,9 @@ export default function PricingPage() {
         </section>
       </main>
       <Footer />
+
+      {/* Modals rendered here, above everything */}
+      <ModalRoot />
     </>
   );
 }

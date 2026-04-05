@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import Image from 'next/image';
 
 interface LogoEntry {
   name: string;
@@ -35,11 +36,12 @@ function LogoItem({ logo, set, index }: { logo: LogoEntry, set: number, index: n
           {logo.name}
         </span>
       ) : (
-        <img
-          src={logo.path}
+        <Image
+          src={logo.path!}
           alt={logo.name}
           onError={() => setHasError(true)}
-          loading="lazy"
+          fill
+          sizes="200px"
           style={imgStyle}
         />
       )}
@@ -50,9 +52,9 @@ function LogoItem({ logo, set, index }: { logo: LogoEntry, set: number, index: n
 export default function LogoCarousel() {
   const logos: LogoEntry[] = [
     {
-      name: "NTT DATA",
-      path: "/asset/complogo/Screenshot 2026-04-03 215138.png",
-      imgStyle: { filter: 'contrast(1.8) saturate(3)' },
+      name: "NTT data",
+      path: "/asset/nttdata.png",
+      imgStyle: { clipPath: 'inset(0 6% 0 5.5%)', transform: 'scale(1.08)' },
     },
     {
       name: "Ralph Lauren",
@@ -67,45 +69,14 @@ export default function LogoCarousel() {
       path: "/asset/complogo/Screenshot 2026-04-03 215446.png",
     },
     {
-      name: "Santen",
+      name: "Santen pharmaceuticals",
       path: "/asset/complogo/Screenshot 2026-04-03 215552.png",
+      imgStyle: { clipPath: 'inset(0 6% 0 5.5%)', transform: 'scale(1.08)' },
     },
     {
       name: "Lancesoft",
       path: "/asset/complogo/Screenshot 2026-04-03 215631.png",
-    },
-    {
-      name: "Ameritas",
-      path: "/asset/complogo/Screenshot 2026-04-03 215714.png",
-    },
-    {
-      // NVIDIA Inception program screenshot was low quality - use styled text fallback
-      name: "NVIDIA Inception",
-      textOnly: true,
-      textColor: '#76b900', // NVIDIA green
-      textStyle: { fontSize: '1.1rem', fontWeight: '900', letterSpacing: '-0.03em' },
-    },
-    {
-      name: "Forum Ventures",
-      path: "/asset/complogo/Screenshot 2026-04-03 215852.png",
-    },
-    {
-      name: "DPA Auctions",
-      path: "/asset/complogo/Screenshot 2026-04-03 215927.png",
-    },
-    {
-      // Dedalus Labs screenshot was a company profile page - use styled text
-      name: "Dedalus Labs",
-      textOnly: true,
-      textColor: '#c8a832', // Dedalus gold
-      textStyle: { fontSize: '1.05rem', fontWeight: '800' },
-    },
-    {
-      // AgentMail had white logo on black - processed but low quality
-      name: "AgentMail",
-      textOnly: true,
-      textColor: '#1a1a1a',
-      textStyle: { fontSize: '1.05rem', fontWeight: '700' },
+      imgStyle: { clipPath: 'inset(0 6% 0 6%)', transform: 'scale(1.08)' },
     },
   ];
 

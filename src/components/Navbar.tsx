@@ -1,37 +1,49 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useUIStore } from '@/store/useUIStore';
+import SearchModal from './SearchModal';
 
 export default function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isMobileMenuOpen, toggleMobileMenu, closeMobileMenu, isSearchOpen, openSearch, closeSearch } = useUIStore();
 
+  // Scroll detection
   useEffect(() => {
+    const nav = document.getElementById('navbar');
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      nav?.classList.toggle('scrolled', window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const toggleMobileMenu = () => {
-    setIsMobileMenuOpen(!isMobileMenuOpen);
-    document.body.style.overflow = !isMobileMenuOpen ? 'hidden' : '';
-  };
+  // Close menu on Escape key
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMobileMenuOpen) closeMobileMenu();
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        openSearch();
+      }
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [isMobileMenuOpen, closeMobileMenu, openSearch]);
 
   return (
     <>
-      <nav className={`navbar ${isScrolled ? 'scrolled' : ''}`} id="navbar">
+      <nav className="navbar" id="navbar">
         <div className="nav-inner">
           <Link href="/" className="logo">
             <Image
               src="/asset/mainai4bharatlogo.png"
               alt="AI4Bharat Logo"
               width={400}
-              height={100}
-              style={{ objectFit: 'contain', width: '200px', height: '60px', transform: 'scale(2.4)', transformOrigin: 'center', mixBlendMode: 'screen', marginLeft: '-70px' }}
+              height={120}
+              id="navLogo"
+              style={{ objectFit: 'contain', width: '240px', height: '70px', transform: 'scale(2.0)', transformOrigin: 'center', mixBlendMode: 'screen', marginLeft: '-40px' }}
             />
           </Link>
           <ul className="nav-links">
@@ -43,13 +55,20 @@ export default function Navbar() {
             <li><Link href="/support">Support</Link></li>
           </ul>
           <div className="nav-actions">
+            <button className="btn btn-ghost search-btn" onClick={openSearch} aria-label="Search">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+              </svg>
+              <span className="search-shortcut">⌘K</span>
+            </button>
             <Link href="/signin" className="btn btn-ghost">Sign in</Link>
             <Link href="/briefing" className="btn btn-primary">Request Briefing</Link>
           </div>
           <button
             className={`hamburger ${isMobileMenuOpen ? 'open' : ''}`}
             id="hamburger"
-            aria-label="Open menu"
+            aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={isMobileMenuOpen}
             onClick={toggleMobileMenu}
           >
             <span></span><span></span><span></span>
@@ -57,18 +76,25 @@ export default function Navbar() {
         </div>
       </nav>
 
-      <div className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`} id="mobileMenu">
-        <Link href="/features" onClick={toggleMobileMenu}>Features</Link>
-        <Link href="/integrations" onClick={toggleMobileMenu}>Integrations</Link>
-        <Link href="/pricing" onClick={toggleMobileMenu}>Pricing</Link>
-        <Link href="/documentation" onClick={toggleMobileMenu}>Documentation</Link>
-        <Link href="/blog" onClick={toggleMobileMenu}>Blog</Link>
-        <Link href="/support" onClick={toggleMobileMenu}>Support</Link>
+      {/* Mobile menu overlay */}
+      <div
+        className={`mobile-menu ${isMobileMenuOpen ? 'open' : ''}`}
+        id="mobileMenu"
+        aria-hidden={!isMobileMenuOpen}
+      >
+        <Link href="/features" onClick={closeMobileMenu}>Features</Link>
+        <Link href="/integrations" onClick={closeMobileMenu}>Integrations</Link>
+        <Link href="/pricing" onClick={closeMobileMenu}>Pricing</Link>
+        <Link href="/documentation" onClick={closeMobileMenu}>Documentation</Link>
+        <Link href="/blog" onClick={closeMobileMenu}>Blog</Link>
+        <Link href="/support" onClick={closeMobileMenu}>Support</Link>
         <div className="nav-cta-group">
-          <Link href="/signin" className="btn btn-ghost" onClick={toggleMobileMenu}>Sign in</Link>
-          <Link href="/briefing" className="btn btn-primary" onClick={toggleMobileMenu}>Request Briefing</Link>
+          <Link href="/signin" className="btn btn-ghost" onClick={closeMobileMenu}>Sign in</Link>
+          <Link href="/briefing" className="btn btn-primary" onClick={closeMobileMenu}>Request Briefing</Link>
         </div>
       </div>
+
+      <SearchModal isOpen={isSearchOpen} onClose={closeSearch} />
     </>
   );
 }

@@ -5,54 +5,52 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { useBriefingStore } from '@/store/useBriefingStore';
+import { useUIStore } from '@/store/useUIStore';
 
 function BriefingForm() {
   const searchParams = useSearchParams();
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    company: '',
-    role: '',
-    companySize: '',
-    interest: '',
-    cloudStack: '',
-    message: ''
-  });
+  const { formData, isDirty, updateField, prefill, markSubmitted, resetForm } = useBriefingStore();
+  const { showToast } = useUIStore();
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
+  // Prefill from URL params (e.g. ?interest=incident-resolution&email=x@y.com)
   useEffect(() => {
     const interestParam = searchParams.get('interest');
     const emailParam = searchParams.get('email');
-    
-    setFormData(prev => ({
-      ...prev,
-      email: emailParam || prev.email,
-      interest: interestParam || prev.interest,
-      message: interestParam 
-        ? `I'm interested in joining the private alpha for ${interestParam}. Please provide more technical details on deployment and prerequisites.`
-        : prev.message
-    }));
-  }, [searchParams]);
-
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+    if (interestParam || emailParam) {
+      prefill({
+        ...(emailParam ? { email: emailParam } : {}),
+        ...(interestParam ? {
+          interest: interestParam,
+          message: `I'm interested in joining the private alpha for ${interestParam}. Please provide more technical details on deployment and prerequisites.`,
+        } : {}),
+      });
+    }
+  }, [searchParams, prefill]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('loading');
-    
+
     try {
       const response = await fetch('/api/briefing', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-      
+
       if (response.ok) {
         setStatus('success');
+        markSubmitted(); // Clears the persisted form + marks as submitted
+        showToast('Briefing request sent! Our team will reach out shortly.', 'success');
       } else {
         setStatus('error');
+        showToast('Submission failed. Please try again.', 'error');
       }
     } catch {
       setStatus('error');
+      showToast('Network error. Please check your connection.', 'error');
     }
   };
 
@@ -66,7 +64,14 @@ function BriefingForm() {
       </Link>
       <div className="auth-header">
         <h1>Request a Briefing</h1>
-        <p>Connect with our enterprise team for a tailored platform walkthrough and ROI assessment.</p>
+        <p>
+          Connect with our enterprise team for a tailored platform walkthrough and ROI assessment.
+          {isDirty && (
+            <span style={{ display: 'block', marginTop: '8px', fontSize: '0.78rem', color: 'var(--accent)', opacity: 0.8 }}>
+              ✓ Draft saved automatically
+            </span>
+          )}
+        </p>
       </div>
 
       {status === 'success' ? (
@@ -80,7 +85,7 @@ function BriefingForm() {
           </div>
           <h2 style={{ marginBottom: '12px' }}>Request Received</h2>
           <p style={{ color: 'var(--text-2)', marginBottom: '24px' }}>
-            Thank you, {formData.name.split(' ')[0] || 'there'}. Our enterprise team will contact you at <strong>{formData.email}</strong> within one business day to schedule your briefing.
+            Thank you, {formData.name.split(' ')[0] || 'there'}. Our enterprise team will contact you within one business day.
           </p>
           <Link href="/" className="btn btn-outline" style={{ width: '100%' }}>Return to homepage</Link>
         </div>
@@ -91,14 +96,14 @@ function BriefingForm() {
               <label htmlFor="name">Full Name</label>
               <input 
                 type="text" id="name" required className="auth-input" placeholder="e.g. Jane Doe" 
-                value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
+                value={formData.name} onChange={(e) => updateField('name', e.target.value)}
               />
             </div>
             <div className="form-group">
               <label htmlFor="email">Work Email</label>
               <input 
                 type="email" id="email" required className="auth-input" placeholder="jane@company.com" 
-                value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
+                value={formData.email} onChange={(e) => updateField('email', e.target.value)}
               />
             </div>
           </div>
@@ -108,14 +113,14 @@ function BriefingForm() {
               <label htmlFor="company">Company Name</label>
               <input 
                 type="text" id="company" required className="auth-input" placeholder="Acme Corp" 
-                value={formData.company} onChange={(e) => setFormData({...formData, company: e.target.value})}
+                value={formData.company} onChange={(e) => updateField('company', e.target.value)}
               />
             </div>
             <div className="form-group">
               <label htmlFor="role">Job Title</label>
               <input 
                 type="text" id="role" required className="auth-input" placeholder="VP of Engineering" 
-                value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}
+                value={formData.role} onChange={(e) => updateField('role', e.target.value)}
               />
             </div>
           </div>
@@ -125,7 +130,7 @@ function BriefingForm() {
               <label htmlFor="companySize">Company Size</label>
               <select 
                 id="companySize" required className="auth-input"
-                value={formData.companySize} onChange={(e) => setFormData({...formData, companySize: e.target.value})}
+                value={formData.companySize} onChange={(e) => updateField('companySize', e.target.value)}
               >
                 <option value="" disabled hidden>Select size...</option>
                 <option value="1-50">1-50 employees</option>
@@ -138,7 +143,7 @@ function BriefingForm() {
               <label htmlFor="interest">Primary Interest</label>
               <select 
                 id="interest" required className="auth-input"
-                value={formData.interest} onChange={(e) => setFormData({...formData, interest: e.target.value})}
+                value={formData.interest} onChange={(e) => updateField('interest', e.target.value)}
               >
                 <option value="" disabled hidden>Select interest...</option>
                 <option value="incident-resolution">Autonomous Incident Resolution</option>
@@ -153,7 +158,7 @@ function BriefingForm() {
             <label htmlFor="cloudStack">Primary Cloud Environment</label>
             <select 
               id="cloudStack" required className="auth-input"
-              value={formData.cloudStack} onChange={(e) => setFormData({...formData, cloudStack: e.target.value})}
+              value={formData.cloudStack} onChange={(e) => updateField('cloudStack', e.target.value)}
             >
               <option value="" disabled hidden>Select environment...</option>
               <option value="aws">Amazon Web Services (AWS)</option>
@@ -170,7 +175,7 @@ function BriefingForm() {
               id="message" rows={3} className="auth-input" 
               style={{ resize: 'vertical' }}
               placeholder="Tell us about your infrastructure, incident volume, or specific goals..."
-              value={formData.message} onChange={(e) => setFormData({...formData, message: e.target.value})}
+              value={formData.message} onChange={(e) => updateField('message', e.target.value)}
             ></textarea>
           </div>
           
@@ -180,11 +185,55 @@ function BriefingForm() {
             </div>
           )}
           
-          <button type="submit" className="btn btn-primary btn-lg" disabled={status === 'loading'} style={{ width: '100%', marginTop: '8px' }}>
-            {status === 'loading' ? 'Submitting request...' : 'Schedule Briefing'}
-          </button>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+            <button type="submit" className="btn btn-primary btn-lg" disabled={status === 'loading'} style={{ flex: 1 }}>
+              {status === 'loading' ? 'Submitting request...' : 'Schedule Briefing'}
+            </button>
+            {isDirty && (
+              <button
+                type="button"
+                onClick={resetForm}
+                className="btn btn-ghost"
+                title="Clear saved draft"
+                style={{ flexShrink: 0, padding: '0 16px' }}
+              >
+                Clear
+              </button>
+            )}
+          </div>
         </form>
       )}
+    </div>
+  );
+}
+
+// Global Toast component
+function GlobalToast() {
+  const { toast, clearToast } = useUIStore();
+  if (!toast) return null;
+
+  const colors = {
+    success: { bg: 'rgba(34, 197, 94, 0.1)', border: 'rgba(34, 197, 94, 0.3)', text: '#22c55e' },
+    error:   { bg: 'rgba(239, 68, 68, 0.1)',  border: 'rgba(239, 68, 68, 0.3)',  text: '#ef4444' },
+    info:    { bg: 'rgba(249, 115, 22, 0.1)', border: 'rgba(249, 115, 22, 0.3)', text: 'var(--accent)' },
+  };
+  const c = colors[toast.type];
+
+  return (
+    <div
+      style={{
+        position: 'fixed', bottom: '24px', right: '24px', zIndex: 9999,
+        background: c.bg, border: `1px solid ${c.border}`, borderRadius: '12px',
+        padding: '14px 20px', maxWidth: '360px',
+        backdropFilter: 'blur(16px)', color: c.text,
+        display: 'flex', alignItems: 'center', gap: '12px',
+        fontWeight: 600, fontSize: '0.9rem',
+        animation: 'slideUp 0.3s ease-out',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+      }}
+    >
+      <span style={{ flex: 1 }}>{toast.message}</span>
+      <button onClick={clearToast} style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', opacity: 0.7, padding: '2px' }}>✕</button>
     </div>
   );
 }
@@ -200,6 +249,7 @@ export default function RequestBriefingPage() {
         </Suspense>
       </main>
       <Footer />
+      <GlobalToast />
     </>
   );
 }
