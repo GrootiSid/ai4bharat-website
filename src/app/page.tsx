@@ -28,6 +28,14 @@ export default function Home() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
+    // Ensure the page always starts at the top on reload
+    if (typeof window !== 'undefined') {
+      if ('scrollRestoration' in history) {
+        history.scrollRestoration = 'manual';
+      }
+      window.scrollTo(0, 0);
+    }
+
     AOS.init({
       duration: 800,
       easing: 'ease-out-cubic',
