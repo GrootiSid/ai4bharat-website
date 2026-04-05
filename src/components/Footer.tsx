@@ -4,6 +4,7 @@ import Image from 'next/image';
 export default function Footer() {
   return (
     <footer className="footer">
+      <div className="footer-bg"></div>
       <div className="footer-container">
         <div className="footer-top">
           <div className="footer-brand-section">

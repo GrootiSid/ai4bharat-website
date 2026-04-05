@@ -124,7 +124,7 @@ export default function CookiesPage() {
       <main className="cookies-page">
         <section className="cookies-hero">
           <div className="hero-visual">
-            <div className="cookie-icon">
+            <div className="cookie-hero-icon">
               <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <circle cx="12" cy="12" r="10"/>
                 <circle cx="8" cy="9" r="1" fill="currentColor"/>

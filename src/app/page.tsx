@@ -28,37 +28,15 @@ export default function Home() {
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
-    
     AOS.init({
       duration: 800,
       easing: 'ease-out-cubic',
       once: true,
-      disable: false,
-      startEvent: 'DOMContentLoaded',
       offset: 50,
       delay: 0,
     });
 
     setIsLoaded(true);
-    
-    const handleScroll = () => {
-      if (window.scrollY > 0) {
-        window.scrollTo(0, 0);
-      }
-    };
-    
-    setTimeout(() => {
-      window.scrollTo(0, 0);
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-    }, 100);
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
   }, []);
 
   return (

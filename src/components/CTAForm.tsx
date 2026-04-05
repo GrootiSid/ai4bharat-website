@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import emailjs from '@emailjs/browser';
 
 export default function CTAForm() {
   const [email, setEmail] = useState('');
@@ -9,15 +10,36 @@ export default function CTAForm() {
 
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email) return;
     
     setStatus('loading');
-    // Redirect to the full briefing form with pre-filled email
-    setTimeout(() => {
+
+    try {
+      const response = await fetch('/api/briefing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          user_email: email,
+          user_name: 'Homepage Lead',
+          interest: 'Waitlist signup'
+        }),
+      });
+
+      if (response.ok) {
+        setStatus('success');
+        setTimeout(() => {
+          router.push(`/briefing?email=${encodeURIComponent(email)}`);
+        }, 1000);
+      } else {
+        throw new Error('API submission failed');
+      }
+    } catch (err: any) {
+      console.error('Submission error:', err);
+      // Still redirect even if API fails to not block user
       router.push(`/briefing?email=${encodeURIComponent(email)}`);
-    }, 800);
+    }
   };
 
   return (

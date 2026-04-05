@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono, Outfit } from "next/font/google";
 import "./globals.css";
+import Template from "./template";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -24,6 +25,13 @@ const outfit = Outfit({
   preload: true,
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export const metadata: Metadata = {
   title: "AI4Bharat — Autonomous Engineering Intelligence",
   description: "AI4Bharat deploys autonomous engineering agents that detect, diagnose, and resolve production incidents with the precision of your best engineers, at machine speed.",
@@ -36,7 +44,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} ${outfit.variable}`}>
-      <body>{children}</body>
+      <body><Template>{children}</Template></body>
     </html>
   );
 }

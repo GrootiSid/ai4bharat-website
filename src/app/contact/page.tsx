@@ -84,10 +84,12 @@ export default function ContactPage() {
     message: ''
   });
   const [formStatus, setFormStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormStatus('loading');
+    setErrorMessage('');
     
     try {
       const response = await fetch('/api/briefing', {
@@ -96,14 +98,27 @@ export default function ContactPage() {
         body: JSON.stringify(formData),
       });
       
-      if (response.ok) {
+      const contentType = response.headers.get('content-type');
+      let data;
+      
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        console.error('Non-JSON response received:', text);
+        throw new Error('Server returned an unexpected response format');
+      }
+
+      if (response.ok && data.success) {
         setFormStatus('success');
         setFormData({ name: '', email: '', company: '', subject: '', message: '' });
       } else {
         setFormStatus('error');
+        setErrorMessage(data.error || 'Something went wrong. Please try again.');
       }
     } catch {
       setFormStatus('error');
+      setErrorMessage('Network error. Please check your connection.');
     }
   };
 
@@ -206,7 +221,7 @@ export default function ContactPage() {
                       />
                     </div>
                     {formStatus === 'error' && (
-                      <div className="form-error">Something went wrong. Please try again.</div>
+                      <div className="form-error" style={{ color: '#ef4444', marginBottom: '16px', fontSize: '0.85rem' }}>{errorMessage}</div>
                     )}
                     <button 
                       type="submit" 

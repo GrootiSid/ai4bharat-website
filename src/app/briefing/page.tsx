@@ -40,15 +40,18 @@ function BriefingForm() {
         body: JSON.stringify(formData),
       });
 
-      if (response.ok) {
+      const data = await response.json().catch(() => ({ success: false, error: 'Unexpected response format' }));
+
+      if (response.ok && data.success) {
         setStatus('success');
         markSubmitted(); // Clears the persisted form + marks as submitted
         showToast('Briefing request sent! Our team will reach out shortly.', 'success');
       } else {
         setStatus('error');
-        showToast('Submission failed. Please try again.', 'error');
+        showToast(data.error || 'Submission failed. Please check your connection.', 'error');
       }
-    } catch {
+    } catch (err: any) {
+      console.error('Submission error:', err);
       setStatus('error');
       showToast('Network error. Please check your connection.', 'error');
     }
