@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import Fuse from 'fuse.js';
 import Link from 'next/link';
 
@@ -20,7 +20,6 @@ interface SearchModalProps {
 }
 
 const searchData: SearchResult[] = [
-  // Documentation
   { title: 'Quick Start Guide', description: 'Deploy AI4Bharat in under 10 minutes with our step-by-step wizard.', category: 'Getting Started', path: '/documentation', type: 'docs', time: '5 min', level: 'Beginner' },
   { title: 'Installation & Setup', description: 'System requirements, environment configuration, and initial deployment.', category: 'Getting Started', path: '/documentation', type: 'docs', time: '10 min', level: 'Beginner' },
   { title: 'First Incident Response', description: 'Walk through a live incident from detection to autonomous remediation.', category: 'Getting Started', path: '/documentation', type: 'docs', time: '8 min', level: 'Intermediate' },
@@ -41,7 +40,6 @@ const searchData: SearchResult[] = [
   { title: 'Data Encryption', description: 'Encryption at rest (AES-256) and in transit (TLS 1.3) architecture.', category: 'Security', path: '/documentation', type: 'docs', time: '6 min', level: 'Advanced' },
   { title: 'Access Control', description: 'RBAC model, SSO/SAML setup, and just-in-time provisioning.', category: 'Security', path: '/documentation', type: 'docs', time: '10 min', level: 'Advanced' },
   { title: 'Troubleshooting Guide', description: 'Common issues, error codes, and diagnostic commands.', category: 'Security', path: '/documentation', type: 'docs', time: '10 min', level: 'Intermediate' },
-  // Blog
   { title: 'Building Resilient Systems', description: 'How AI agents are revolutionizing incident response and system resilience.', category: 'Engineering', path: '/blog', type: 'blog' },
   { title: 'The Future of DevOps', description: 'Exploring autonomous engineering and the evolution of platform engineering.', category: 'Thought Leadership', path: '/blog', type: 'blog' },
   { title: 'Scaling with AI', description: 'Lessons learned from deploying AI-driven incident management at scale.', category: 'Case Studies', path: '/blog', type: 'blog' },
@@ -50,10 +48,20 @@ const searchData: SearchResult[] = [
   { title: 'Machine Learning for SRE', description: 'How ML is transforming site reliability engineering.', category: 'Engineering', path: '/blog', type: 'blog' },
 ];
 
+const typeConfig: Record<string, { color: string; bg: string; label: string }> = {
+  docs: { color: 'var(--accent)', bg: 'rgba(249,115,22,0.1)', label: 'Docs' },
+  blog: { color: '#3b82f6', bg: 'rgba(59,130,246,0.1)', label: 'Blog' },
+  changelog: { color: '#22c55e', bg: 'rgba(34,197,94,0.1)', label: 'Changelog' },
+  tutorial: { color: '#a855f7', bg: 'rgba(168,85,247,0.1)', label: 'Tutorial' },
+};
+
 export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const resultsRef = useRef<HTMLDivElement>(null);
 
   const fuse = useMemo(() => new Fuse(searchData, {
     keys: [
@@ -69,9 +77,13 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const handleSearch = useCallback((searchQuery: string) => {
     setQuery(searchQuery);
     if (searchQuery.trim().length >= 2) {
-      const searchResults = fuse.search(searchQuery).slice(0, 8).map(r => r.item);
-      setResults(searchResults);
-      setSelectedIndex(0);
+      setIsLoading(true);
+      setTimeout(() => {
+        const searchResults = fuse.search(searchQuery).slice(0, 8).map(r => r.item);
+        setResults(searchResults);
+        setSelectedIndex(0);
+        setIsLoading(false);
+      }, 50);
     } else {
       setResults([]);
     }
@@ -80,21 +92,43 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (!isOpen) return;
 
-    if (e.key === 'ArrowDown') {
+    if (e.key === 'Escape') {
       e.preventDefault();
-      setSelectedIndex(i => Math.min(i + 1, results.length - 1));
+      onClose();
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (results.length > 0) {
+        setSelectedIndex(i => Math.min(i + 1, results.length - 1));
+        const selectedEl = document.querySelector('.search-result-item.selected') as HTMLElement;
+        selectedEl?.nextElementSibling?.scrollIntoView({ block: 'nearest' });
+      }
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex(i => Math.max(i - 1, 0));
+      if (results.length > 0) {
+        setSelectedIndex(i => Math.max(i - 1, 0));
+        const selectedEl = document.querySelector('.search-result-item.selected') as HTMLElement;
+        selectedEl?.previousElementSibling?.scrollIntoView({ block: 'nearest' });
+      }
     } else if (e.key === 'Enter' && results[selectedIndex]) {
+      e.preventDefault();
       window.location.href = results[selectedIndex].path;
     }
-  }, [isOpen, results, selectedIndex]);
+  }, [isOpen, results, selectedIndex, onClose]);
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [handleKeyDown]);
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+      setTimeout(() => inputRef.current?.focus(), 100);
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -104,69 +138,163 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
     }
   }, [isOpen]);
 
-  if (!isOpen) return null;
+  useEffect(() => {
+    resultsRef.current?.scrollIntoView({ block: 'nearest' });
+  }, [selectedIndex]);
 
-  const typeColors: Record<string, string> = {
-    docs: 'var(--accent)',
-    blog: '#3b82f6',
-    changelog: '#22c55e',
-    tutorial: '#a855f7',
-  };
+  if (!isOpen) return null;
 
   return (
     <div className="search-modal-overlay" onClick={onClose}>
       <div className="search-modal" onClick={e => e.stopPropagation()}>
         <div className="search-input-wrapper">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-          </svg>
+          <div className="search-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+          </div>
           <input
+            ref={inputRef}
             type="text"
-            placeholder="Search docs, blog, tutorials..."
+            placeholder="Search documentation, blog posts, tutorials..."
             value={query}
             onChange={e => handleSearch(e.target.value)}
-            autoFocus
+            className="search-input"
           />
-          <kbd>ESC</kbd>
+          <div className="search-right">
+            {isLoading && <div className="search-spinner"></div>}
+            <kbd className="search-kbd">ESC</kbd>
+          </div>
         </div>
 
-        {results.length > 0 && (
-          <div className="search-results">
-            {results.map((result, index) => (
-              <Link
-                key={`${result.title}-${index}`}
-                href={result.path}
-                className={`search-result-item ${index === selectedIndex ? 'selected' : ''}`}
-                onMouseEnter={() => setSelectedIndex(index)}
-              >
-                <div className="search-result-content">
-                  <span className="search-result-title">{result.title}</span>
-                  <span className="search-result-desc">{result.description}</span>
+        <div className="search-body" ref={resultsRef}>
+          {results.length > 0 && (
+            <div className="search-results">
+              <div className="search-section-title">Search Results</div>
+              {results.map((result, index) => {
+                const config = typeConfig[result.type];
+                return (
+                  <Link
+                    key={`${result.title}-${index}`}
+                    href={result.path}
+                    className={`search-result-item ${index === selectedIndex ? 'selected' : ''}`}
+                    onMouseEnter={() => setSelectedIndex(index)}
+                  >
+                    <div className="search-result-icon">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                        <path d="M14 2v6h6"/>
+                      </svg>
+                    </div>
+                    <div className="search-result-content">
+                      <div className="search-result-header">
+                        <span className="search-result-title">{result.title}</span>
+                        <span className="search-result-type" style={{ color: config.color, background: config.bg }}>
+                          {config.label}
+                        </span>
+                      </div>
+                      <span className="search-result-desc">{result.description}</span>
+                      {result.time && result.level && (
+                        <div className="search-result-meta">
+                          <span>{result.time}</span>
+                          <span className="meta-sep">•</span>
+                          <span>{result.level}</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="search-result-arrow">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                      </svg>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+
+          {query.length >= 2 && results.length === 0 && !isLoading && (
+            <div className="search-empty">
+              <div className="search-empty-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                  <path d="M8 8l6 6M14 8l-6 6"/>
+                </svg>
+              </div>
+              <p className="search-empty-title">No results found</p>
+              <p className="search-empty-desc">Try searching for something else or check your spelling</p>
+            </div>
+          )}
+
+          {query.length < 2 && (
+            <div className="search-suggestions">
+              <div className="search-section-title">Quick Links</div>
+              <Link href="/documentation" className="search-suggestion-item">
+                <div className="search-suggestion-icon docs">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                    <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+                  </svg>
                 </div>
-                <span className="search-result-type" style={{ color: typeColors[result.type] }}>
-                  {result.type}
-                </span>
+                <div className="search-suggestion-content">
+                  <span className="search-suggestion-title">Documentation</span>
+                  <span className="search-suggestion-desc">Guides, API reference, and tutorials</span>
+                </div>
               </Link>
-            ))}
-          </div>
-        )}
-
-        {query.length >= 2 && results.length === 0 && (
-          <div className="search-no-results">
-            <p>No results found for "{query}"</p>
-          </div>
-        )}
-
-        {query.length < 2 && (
-          <div className="search-hints">
-            <p>Type at least 2 characters to search</p>
-          </div>
-        )}
+              <Link href="/blog" className="search-suggestion-item">
+                <div className="search-suggestion-icon blog">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 19l7-7 3 3-7 7-3-3z"/>
+                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
+                    <path d="M2 2l7.586 7.586"/>
+                  </svg>
+                </div>
+                <div className="search-suggestion-content">
+                  <span className="search-suggestion-title">Blog</span>
+                  <span className="search-suggestion-desc">Latest insights and updates</span>
+                </div>
+              </Link>
+              <Link href="/changelog" className="search-suggestion-item">
+                <div className="search-suggestion-icon changelog">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <div className="search-suggestion-content">
+                  <span className="search-suggestion-title">Changelog</span>
+                  <span className="search-suggestion-desc">Recent product updates</span>
+                </div>
+              </Link>
+              <Link href="/support" className="search-suggestion-item">
+                <div className="search-suggestion-icon support">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/>
+                    <path d="M12 17h.01"/>
+                  </svg>
+                </div>
+                <div className="search-suggestion-content">
+                  <span className="search-suggestion-title">Support</span>
+                  <span className="search-suggestion-desc">Get help and contact us</span>
+                </div>
+              </Link>
+            </div>
+          )}
+        </div>
 
         <div className="search-footer">
-          <span><kbd>↑↓</kbd> Navigate</span>
-          <span><kbd>↵</kbd> Select</span>
-          <span><kbd>ESC</kbd> Close</span>
+          <div className="search-footer-item">
+            <kbd>↑</kbd><kbd>↓</kbd>
+            <span>Navigate</span>
+          </div>
+          <div className="search-footer-item">
+            <kbd>↵</kbd>
+            <span>Select</span>
+          </div>
+          <div className="search-footer-item">
+            <kbd>ESC</kbd>
+            <span>Close</span>
+          </div>
         </div>
       </div>
     </div>
