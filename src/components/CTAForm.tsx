@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import emailjs from '@emailjs/browser';
 
 export default function CTAForm() {
   const [email, setEmail] = useState('');
